@@ -1,0 +1,11 @@
+openai
+transformers
+torch 
+pandas
+numpy
+langchain
+streamlit 
+tiktoken 
+duckduckgo-search
+python-dotenv
+langchain
