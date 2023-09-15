@@ -14,6 +14,8 @@ from googleapiclient.discovery import build
 
 from langchain.agents.agent_toolkits import GmailToolkit
 from langchain.tools.gmail.utils import build_resource_service, get_gmail_credentials
+from langchain.agents.agent_toolkits import ZapierToolkit
+from langchain.utilities.zapier import ZapierNLAWrapper
 from dotenv import load_dotenv
 from langchain.callbacks.base import BaseCallbackHandler
 from abc import ABC, abstractmethod
@@ -216,25 +218,6 @@ class GeneralAssistanAgent(SkillfulAssistantAgent):
       
 
     def set_gmail_tools(self):
-        '''
-        credentials = get_gmail_credentials(
-        token_file="token.json",
-        scopes=["https://mail.google.com/"],
-        client_secrets_file="credentials.json",
-        )
-        api_resource =  build("gmail", 'v1', credentials=credentials)
-        logging.debug(f'credentials is {credentials}')
-        logging.debug(f'api resource is {api_resource}')
-        print(f'debug', credentials)
-        print('debug',api_resource)
-        #api_resource = build_resource_service(credentials=credentials)
-        #toolkit = GmailToolkit(api_resource=api_resource) 
-        #GmailToolkit.update_forward_refs()
-        #toolkit = GmailToolkit(api_resource=api_resource) 
-        
-        toolkit = CustomGmailToolkit()
-        GmailToolkit.update_forward_refs()
-        '''
         toolkit = GmailToolkit()
         self.gmail_tools = toolkit.get_tools()
 
@@ -245,9 +228,39 @@ class GeneralAssistanAgent(SkillfulAssistantAgent):
     def set_prompt_template(self):
         return ''
     def run_agent(self, input_prompt: str) -> str:
-        llm = OpenAI(temperature=0)
+        llm = self.llm #OpenAI(temperature=0)
         agent = initialize_agent(
         tools= self.tools,
         llm=llm,
-        agent=AgentType.STRUCTURED_CHAT_ZERO_SHOT_REACT_DESCRIPTION)
-        return agent.run(input_prompt)
+        agent=AgentType.STRUCTURED_CHAT_ZERO_SHOT_REACT_DESCRIPTION,
+        #return_intermediate_steps=True
+        verbose=True )
+        logging.debug(f'agent is {agent}')
+        logging.debug(f'agent template {agent.agent.llm_chain.prompt}')
+        return agent.run(input_prompt) 
+
+
+
+class AGIAssistanAgent(SkillfulAssistantAgent):
+    def __init__(self):
+       
+        super().__init__()
+      
+
+    def set_tools(self):
+        zapier = ZapierNLAWrapper()
+        toolkit = ZapierToolkit.from_zapier_nla_wrapper(zapier)
+        return toolkit.get_tools()
+    def set_memory(self):
+        return ''
+    def set_prompt_template(self):
+        return ''
+    def run_agent(self, input_prompt: str) -> str:
+        agent = initialize_agent(
+        tools=self.tools, 
+        llm=self.llm, 
+        agent=AgentType.ZERO_SHOT_REACT_DESCRIPTION, 
+        verbose=True
+                    )
+
+        return agent.run(input_prompt) 

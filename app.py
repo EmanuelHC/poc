@@ -3,15 +3,16 @@ import streamlit as st
 import subprocess
 import dotenv 
 from utils import CaptureLogs, stdout_stream, stderr_stream
-
+from audio_recorder_streamlit import audio_recorder
+from audiorecorder import audiorecorder
 from agents import MedicalAssistantAgent, GeneralAssistanAgent
-
+import numpy as np
 #openai.api_base = "https://api.openai.com"
 
 MEDICAL_ASSITANT_TAG = 'Skillful Medical Assistant'
 GENERAL_ASSITANT_TAG = "Skillful General Assistant"
-WORK_ASSISTANT_TAG = "Skillful Work Assistant"
-
+#WORK_ASSISTANT_TAG = "Skillful Work Assistant"
+SKILLFUL_ASSISTANT_TAG = "Skillful AI Assistant"
 # Set page config at the top
 st.set_page_config(layout="wide")
 # Add Streamlit customization
@@ -46,8 +47,9 @@ def get_selected_agent(assistant):
         return MedicalAssistantAgent()
     elif assistant == GENERAL_ASSITANT_TAG:
         return GeneralAssistanAgent()
-    elif assistant == WORK_ASSISTANT_TAG:
-        pass
+
+    elif assistant == SKILLFUL_ASSISTANT_TAG:
+        return SKILLFUL_ASSISTANT_TAG
         #return WorkAssistantAgent()
 
 def main():
@@ -60,18 +62,38 @@ def main():
     
     assistant_images = {
         MEDICAL_ASSITANT_TAG: "assets/medical_assistant_03.jpeg",
-        "Skillful General Assistant": "assets/general_assistant_01.jpeg",
-        "Skillful Work Assistant": "assets/work_assistant_02.jpeg"
+        GENERAL_ASSITANT_TAG: "assets/general_assistant_01.jpeg",
+        SKILLFUL_ASSISTANT_TAG: "assets/work_assistant_02.jpeg"
     }
 
     # Create two columns for layout
-    col1, col2 = st.columns([1,1])
+    col1, col2, col3  = st.columns([1,1, 1])
 
     with col1:
         assistant = st.selectbox('Select an assistant option from the list:', (MEDICAL_ASSITANT_TAG, 
                                                                             GENERAL_ASSITANT_TAG,
-                                                                            WORK_ASSISTANT_TAG,))
+                                                                            SKILLFUL_ASSISTANT_TAG,))
+
+
     with col2:
+        audio_bytes = audio_recorder(
+            text="",
+            recording_color="#e8b62c",
+            neutral_color="7F00FF",
+            #icon_name="user",
+            icon_size="6x",
+            energy_threshold=(-1.0, 1.0),
+            pause_threshold=10.0,
+
+          
+        )
+   
+
+        if audio_bytes:
+            #st.audio(note_la, sample_rate=sample_rate,format="audio/wav")
+            st.audio(audio_bytes, format="audio/wav")
+
+    with col3:
         # Set initial size of the image
         image_size = 'auto'
         
@@ -89,17 +111,10 @@ def main():
             with col1:
                 st.subheader("Output")
                 agent =  get_selected_agent(assistant)
-                if assistant == MEDICAL_ASSITANT_TAG:  
-                    #result = get_gorilla_response(prompt=input_prompt, model=option)
-                    with CaptureLogs():
-                        result = agent.run_agent(input_prompt) 
-                    st.write(result)
-                elif assistant == GENERAL_ASSITANT_TAG:
-                    with CaptureLogs():
-                        result = agent.run_agent(input_prompt) 
-                    st.write(result) 
-
-
+                with CaptureLogs():
+                    result = agent.run_agent(input_prompt) 
+                st.write(result)
+                
             with col2:
                 # pass        
                 st.subheader("Process")
