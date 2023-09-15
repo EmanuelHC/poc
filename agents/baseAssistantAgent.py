@@ -19,15 +19,17 @@ from langchain.utilities.zapier import ZapierNLAWrapper
 from dotenv import load_dotenv
 from langchain.callbacks.base import BaseCallbackHandler
 from abc import ABC, abstractmethod
+from datetime import date
 # Load the .env file
 load_dotenv()
 
-from my_gmail_toolkit import CustomGmailToolkit
+from utils.my_gmail_toolkit import CustomGmailToolkit
 
+os.environ["ZAPIER_NLA_API_KEY"] = os.environ.get("ZAPIER_NLA_API_KEY", "")
 
 import logging
 
-logging.basicConfig(level=logging.DEBUG, filename='app.log', filemode='w', format='%(name)s - %(levelname)s - %(message)s')
+logging.basicConfig(level=logging.DEBUG, filename='agents.log', filemode='w', format='%(name)s - %(levelname)s - %(message)s')
 
 
 
@@ -39,7 +41,7 @@ if not openai_api_key:
     raise ValueError("OPENAI_API_KEY not found in the .env file.")
 
 
-class SkillfulAssistantAgent(ABC):
+class BaseAssistantAgent(ABC):
     def __init__(self):
         self._tools = self.build_tools()
         self.tools = self.set_tools()
@@ -61,6 +63,16 @@ class SkillfulAssistantAgent(ABC):
                     name = "Search WebMD",
                     func= self._search_webmd,
                     description="useful for when you need to answer medical and pharmalogical questions"
+                    ),
+                "Today's Date": Tool(
+                    name = "Today's Date",
+                    func= self._todays_date,
+                    description="useful for when you need to know the current date",
+                    ),
+                "PAL": Tool(
+                    name = "PAL",
+                    func= self._pal,
+                    description="useful for when you need to answer questions about math or word problems or date comparisons",
                     )
             }
             return tools
@@ -83,76 +95,6 @@ class SkillfulAssistantAgent(ABC):
     def run_agent(self, input_prompt: str) -> str:
         pass
 
-class MedicalAssistantAgent(SkillfulAssistantAgent):
-    def __init__(self):
-        super().__init__()
-    
-    def run_agent(self, input_prompt: str) -> str:
-        llm_chain = LLMChain(llm=self.llm, prompt=self.prompt_template)
-        tool_names = [tool.name for tool in self.tools]
-
-        agent = LLMSingleActionAgent(
-            llm_chain=llm_chain,
-            output_parser= self.output_parser,
-            stop=["\nObservation:"],
-            allowed_tools=tool_names
-        )
-        # Set agent executor
-        # Agent Executors take an agent and tools and use the agent to decide which tools to call and in what order.
-        agent_executor = AgentExecutor.from_agent_and_tools(agent=agent,
-                                                    tools=self.tools,
-                                                    verbose=True,
-                                                    memory=self.memory)
-        agent_output = agent_executor.run(input_prompt)
-        self.process = agent_output 
-        print("debugging agent output: ", agent_output)
-        final_answer = agent_output.split("Final Answer:")[-1].strip()
-        return final_answer
-
-    def set_tools(self):
-        
-        return [self._tools['Web Search'], self._tools['Search WebMD']]
-    
-    def _search_webmd(self, input):
-        search = DuckDuckGoSearchRun()
-        search_results = search.run(f"site:webmd.com {input}")
-        return search_results
-
-    def set_prompt_template(self):
-        template = """Answer the following questions as best you can, but speaking as compasionate medical professional. You have access to the following tools:
-
-                        {tools}
-
-                        Use the following format:
-
-                        Question: the input question you must answer
-                        Thought: you should always think about what to do
-                        Action: the action to take, should be one of [{tool_names}]
-                        Action Input: the input to the action
-                        Observation: the result of the action
-                        ... (this Thought/Action/Action Input/Observation can repeat N times)
-                        Thought: I now know the final answer
-                        Final Answer: the final answer to the original input question
-
-                        Begin! Remember to answer as a compansionate medical professional when giving your final answer.
-                        Previous conversation history:
-                        {history}
-                        Question: {input}
-                        {agent_scratchpad}"""
-        return CustomPromptTemplate(
-            template=template,
-            tools=self.tools,
-            # This omits the `agent_scratchpad`, `tools`, and `tool_names` variables because those are generated dynamically
-            # This includes the `intermediate_steps` variable because that is needed
-            input_variables=["input", "intermediate_steps", "history"]
-        )
-
-    def set_memory(self):
-        memory=ConversationBufferWindowMemory(k=5)
-        return memory
-    
-    def get_summary(self):
-        return self.memory
 
 class CustomOutputParser(AgentOutputParser):
     '''
@@ -208,59 +150,3 @@ class CustomPromptTemplate(StringPromptTemplate):
         # Create a list of tool names for the tools provided
         kwargs["tool_names"] = ", ".join([tool.name for tool in self.tools])
         return self.template.format(**kwargs)
-
-
-
-class GeneralAssistanAgent(SkillfulAssistantAgent):
-    def __init__(self):
-        self.set_gmail_tools()
-        super().__init__()
-      
-
-    def set_gmail_tools(self):
-        toolkit = GmailToolkit()
-        self.gmail_tools = toolkit.get_tools()
-
-    def set_tools(self):
-        return self.gmail_tools
-    def set_memory(self):
-        return ''
-    def set_prompt_template(self):
-        return ''
-    def run_agent(self, input_prompt: str) -> str:
-        llm = self.llm #OpenAI(temperature=0)
-        agent = initialize_agent(
-        tools= self.tools,
-        llm=llm,
-        agent=AgentType.STRUCTURED_CHAT_ZERO_SHOT_REACT_DESCRIPTION,
-        #return_intermediate_steps=True
-        verbose=True )
-        logging.debug(f'agent is {agent}')
-        logging.debug(f'agent template {agent.agent.llm_chain.prompt}')
-        return agent.run(input_prompt) 
-
-
-
-class AGIAssistanAgent(SkillfulAssistantAgent):
-    def __init__(self):
-       
-        super().__init__()
-      
-
-    def set_tools(self):
-        zapier = ZapierNLAWrapper()
-        toolkit = ZapierToolkit.from_zapier_nla_wrapper(zapier)
-        return toolkit.get_tools()
-    def set_memory(self):
-        return ''
-    def set_prompt_template(self):
-        return ''
-    def run_agent(self, input_prompt: str) -> str:
-        agent = initialize_agent(
-        tools=self.tools, 
-        llm=self.llm, 
-        agent=AgentType.ZERO_SHOT_REACT_DESCRIPTION, 
-        verbose=True
-                    )
-
-        return agent.run(input_prompt) 

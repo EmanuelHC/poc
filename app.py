@@ -2,10 +2,12 @@ import openai
 import streamlit as st
 import subprocess
 import dotenv 
-from utils import CaptureLogs, stdout_stream, stderr_stream
+from utils.utils import CaptureLogs, stdout_stream, stderr_stream
 from audio_recorder_streamlit import audio_recorder
 from audiorecorder import audiorecorder
-from agents import MedicalAssistantAgent, GeneralAssistanAgent
+from agents.medicalAssistantAgent import MedicalAssistantAgent
+from agents.generalAssistantAgent import GeneralAssistanAgent
+from  agents.skillfulAssistantAgent import  SkillfulAssistantAgent
 import numpy as np
 #openai.api_base = "https://api.openai.com"
 
@@ -49,7 +51,7 @@ def get_selected_agent(assistant):
         return GeneralAssistanAgent()
 
     elif assistant == SKILLFUL_ASSISTANT_TAG:
-        return SKILLFUL_ASSISTANT_TAG
+        return SkillfulAssistantAgent() 
         #return WorkAssistantAgent()
 
 def main():

@@ -6,4 +6,3 @@ tools = toolkit.get_tools()
 print(tools) 
 
 
-def get_gma
