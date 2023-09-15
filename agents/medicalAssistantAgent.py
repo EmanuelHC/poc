@@ -20,7 +20,7 @@ from dotenv import load_dotenv
 from langchain.callbacks.base import BaseCallbackHandler
 from abc import ABC, abstractmethod
 from datetime import date
-from baseAssistantAgent import BaseAssistantAgent, CustomPromptTemplate, CustomOutputParser
+from .baseAssistantAgent import BaseAssistantAgent, CustomPromptTemplate, CustomOutputParser
 # Load the .env file
 load_dotenv()
 
@@ -71,7 +71,7 @@ class MedicalAssistantAgent(BaseAssistantAgent):
 
     def set_tools(self):
         
-        return [self._tools['Web Search'], self._tools['Search WebMD']]
+        return [self._tools['Web Search'], self._tools['Search WebMD'], self._tools['Today Date']] 
     
 
     def set_prompt_template(self):

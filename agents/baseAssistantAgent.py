@@ -11,7 +11,7 @@ import os
 import langchain
 from langchain.agents import initialize_agent, AgentType
 from googleapiclient.discovery import build
-
+from langchain_experimental.pal_chain import PALChain
 from langchain.agents.agent_toolkits import GmailToolkit
 from langchain.tools.gmail.utils import build_resource_service, get_gmail_credentials
 from langchain.agents.agent_toolkits import ZapierToolkit
@@ -20,6 +20,8 @@ from dotenv import load_dotenv
 from langchain.callbacks.base import BaseCallbackHandler
 from abc import ABC, abstractmethod
 from datetime import date
+from pydantic import BaseModel, Field
+
 # Load the .env file
 load_dotenv()
 
@@ -64,8 +66,8 @@ class BaseAssistantAgent(ABC):
                     func= self._search_webmd,
                     description="useful for when you need to answer medical and pharmalogical questions"
                     ),
-                "Today's Date": Tool(
-                    name = "Today's Date",
+                "Today Date": Tool(
+                    name = "Today Date",
                     func= self._todays_date,
                     description="useful for when you need to know the current date",
                     ),
@@ -81,6 +83,14 @@ class BaseAssistantAgent(ABC):
         search = DuckDuckGoSearchRun()
         search_results = search.run(f"site:webmd.com {input}")
         return search_results
+    
+    def _todays_date(self, input):
+        return date.today().strftime("%B %d, %Y")
+    
+    def _pal(self, input):
+        llm = OpenAI(temperature=0, verbose=True)
+        pal_chain = PALChain.from_math_prompt(llm, verbose=True)
+        return pal_chain.run(input)
     
     @abstractmethod
     def set_tools(self):

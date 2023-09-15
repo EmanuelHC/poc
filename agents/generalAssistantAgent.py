@@ -20,7 +20,7 @@ from dotenv import load_dotenv
 from langchain.callbacks.base import BaseCallbackHandler
 from abc import ABC, abstractmethod
 from datetime import date
-from baseAssistantAgent import BaseAssistantAgent, CustomPromptTemplate, CustomOutputParser
+from .baseAssistantAgent import BaseAssistantAgent, CustomPromptTemplate, CustomOutputParser
 # Load the .env file
 load_dotenv()
 
@@ -53,7 +53,8 @@ class GeneralAssistanAgent(BaseAssistantAgent):
         self.gmail_tools = toolkit.get_tools()
 
     def set_tools(self):
-        return self.gmail_tools
+        other_tools = [self._tools['Today Date']] 
+        return self.gmail_tools + other_tools 
     def set_memory(self):
         return ''
     def set_prompt_template(self):

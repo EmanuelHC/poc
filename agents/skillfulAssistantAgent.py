@@ -20,7 +20,7 @@ from dotenv import load_dotenv
 from langchain.callbacks.base import BaseCallbackHandler
 from abc import ABC, abstractmethod
 from datetime import date
-from baseAssistantAgent import BaseAssistantAgent, CustomPromptTemplate, CustomOutputParser
+from .baseAssistantAgent import BaseAssistantAgent, CustomPromptTemplate, CustomOutputParser
 # Load the .env file
 load_dotenv()
 

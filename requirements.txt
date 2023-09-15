@@ -9,3 +9,4 @@ tiktoken
 duckduckgo-search
 python-dotenv
 langchain
+llama-hub

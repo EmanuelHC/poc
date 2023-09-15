@@ -55,7 +55,7 @@ def get_selected_agent(assistant):
         #return WorkAssistantAgent()
 
 def main():
-    st.title("Skillful AI POC")
+    st.title(":violet[Skillful AI POC]")
 
    
 
