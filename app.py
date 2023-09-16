@@ -10,6 +10,19 @@ from agents.generalAssistantAgent import GeneralAssistanAgent
 from  agents.skillfulAssistantAgent import  SkillfulAssistantAgent
 import numpy as np
 #openai.api_base = "https://api.openai.com"
+import google.oauth2.credentials
+import google_auth_oauthlib.flow
+from googleapiclient.discovery import build
+
+
+SCOPES = ['https://mail.google.com/', 'https://www.googleapis.com/auth/calendar']
+
+from refresh_google_token import refresh_google_token
+token_file_name = 'token_mail.json'
+credentials = google.oauth2.credentials.Credentials.from_authorized_user_file(token_file_name)
+refresh_google_token(token_file_name) 
+
+
 
 MEDICAL_ASSITANT_TAG = 'Skillful Medical Assistant'
 GENERAL_ASSITANT_TAG = "Skillful General Assistant"
@@ -63,8 +76,9 @@ def main():
 
     
     assistant_images = {
-        MEDICAL_ASSITANT_TAG: "assets/medical_assistant_03.jpeg",
         GENERAL_ASSITANT_TAG: "assets/general_assistant_01.jpeg",
+        MEDICAL_ASSITANT_TAG: "assets/medical_assistant_03.jpeg",
+     
         SKILLFUL_ASSISTANT_TAG: "assets/work_assistant_02.jpeg"
     }
 
@@ -72,8 +86,8 @@ def main():
     col1, col2, col3  = st.columns([1,1, 1])
 
     with col1:
-        assistant = st.selectbox('Select an assistant option from the list:', (MEDICAL_ASSITANT_TAG, 
-                                                                            GENERAL_ASSITANT_TAG,
+        assistant = st.selectbox('Select an assistant option from the list:', ( GENERAL_ASSITANT_TAG,
+                                                                                MEDICAL_ASSITANT_TAG, 
                                                                             SKILLFUL_ASSISTANT_TAG,))
 
 
@@ -114,14 +128,25 @@ def main():
                 st.subheader("Output")
                 agent =  get_selected_agent(assistant)
                 with CaptureLogs():
-                    result = agent.run_agent(input_prompt) 
+                    try:
+                        result = agent.run_agent(input_prompt)
+                    except Exception as e:
+                        result = f"Proccess not finished succesfully due to: {e}" 
                 st.write(result)
-                
+
+            
+            if 'previous_output' not in st.session_state:
+                st.session_state.previous_output =   ''
             with col2:
                 # pass        
                 st.subheader("Process")
-                # Display captured logs in Streamlit
-                st.write( stdout_stream.getvalue())
+                current_output = stdout_stream.getvalue()
+                # Extract the new content added since the last iteration
+                new_output = current_output[len(st.session_state.previous_output):]
+                # Display the new content in Streamlit
+                st.write(new_output)
+                # Update the session state variable for the next iteration
+                st.session_state.previous_output = current_output
             with col3:
                 st.subheader("Memory")
                 st.write( agent.memory)

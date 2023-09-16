@@ -44,30 +44,34 @@ if not openai_api_key:
 
 class SkillfulAssistantAgent(BaseAssistantAgent):
     def __init__(self):
+       
+        self.set_gmail_tools()
         super().__init__()
       
 
+    def set_gmail_tools(self):
+        toolkit = GmailToolkit()
+        self.gmail_tools = toolkit.get_tools()
+
     def set_tools(self):
-        zapier = ZapierNLAWrapper()
-        toolkit = ZapierToolkit.from_zapier_nla_wrapper(zapier)
-        return toolkit.get_tools()
+        other_tools = [self._tools['Today Date']] 
+        return self.gmail_tools + other_tools 
+        #return self.gmail_tools
     def set_memory(self):
-        return ''
+        memory=ConversationBufferWindowMemory(k=2)
+        return memory
     def set_prompt_template(self):
         return ''
     def run_agent(self, input_prompt: str) -> str:
-        try:
-            agent = initialize_agent(
-            tools=self.tools, 
-            llm=self.llm, 
-            agent=AgentType.ZERO_SHOT_REACT_DESCRIPTION, 
-            verbose=True
-            )
-        except Exception as e:
-            raise Exception(f'error initializing agent: tools{self.tools}') 
-          
+        llm = self.llm #OpenAI(temperature=0)
+        agent = initialize_agent(
+        tools= self.tools,
+        llm=llm,
+        agent=AgentType.STRUCTURED_CHAT_ZERO_SHOT_REACT_DESCRIPTION,
+        #return_intermediate_steps=True
+        memory = self.memory,
+        verbose=True 
+        )
         logging.debug(f'agent is {agent}')
-        logging.debug(f'[debug] agent tools {self.llm}')
         logging.debug(f'agent template {agent.agent.llm_chain.prompt}')
-
         return agent.run(input_prompt) 
