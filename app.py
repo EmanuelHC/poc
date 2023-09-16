@@ -13,6 +13,8 @@ import numpy as np
 import google.oauth2.credentials
 import google_auth_oauthlib.flow
 from googleapiclient.discovery import build
+import pandas as pd
+from io import StringIO
 
 
 SCOPES = ['https://mail.google.com/', 'https://www.googleapis.com/auth/calendar']
@@ -89,7 +91,31 @@ def main():
         assistant = st.selectbox('Select an assistant option from the list:', ( GENERAL_ASSITANT_TAG,
                                                                                 MEDICAL_ASSITANT_TAG, 
                                                                             SKILLFUL_ASSISTANT_TAG,))
+        uploaded_file = st.file_uploader("Choose a CSV file", type="csv")
+        # Check if a file has been uploaded
+        if uploaded_file:
+        # Save the uploaded file to a desired location
+            with open("uploaded_file.csv", "wb") as f:
+                f.write(uploaded_file.getvalue())
 
+            # Read the file in binary mode and decode with error handling
+            with open('uploaded_file.csv', 'rb') as f:
+                content = f.read().decode('utf-8', errors='replace')
+
+            # Convert the decoded content to a pandas DataFrame
+            df = pd.read_csv(StringIO(content))
+
+            # Optional: Remove rows that contain the Unicode replacement character
+            df = df[~df.applymap(lambda x: '�' in str(x)).any(axis=1)]
+
+            # Drop rows with NaN values
+            df.dropna(inplace=True)
+
+            # Save the cleaned data to a new CSV file
+            df.to_csv('cleaned_file.csv', index=False)
+
+
+            st.success("File uploaded and saved!")
 
     with col2:
         audio_bytes = audio_recorder(
@@ -108,6 +134,8 @@ def main():
         if audio_bytes:
             #st.audio(note_la, sample_rate=sample_rate,format="audio/wav")
             st.audio(audio_bytes, format="audio/wav")
+        
+       
 
     with col3:
         # Set initial size of the image
