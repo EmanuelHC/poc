@@ -10,3 +10,8 @@ duckduckgo-search
 python-dotenv
 langchain
 llama-hub
+python-dotenv
+requests
+soundfile
+datasets
+nltk
