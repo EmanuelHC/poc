@@ -11,6 +11,10 @@ openai_api_key = os.getenv("OPENAI_API_KEY")
 def calendar_agent(input_prompt):
     # Import and initialize our tool spec
     gcal_tools = GoogleCalendarToolSpec().to_tool_list()
-
-    agent = OpenAIAgent.from_tools(gcal_tools, verbose=False)
-    return agent.chat(input_prompt).response
+    try:
+        agent = OpenAIAgent.from_tools(gcal_tools, verbose=True)
+        response = agent.chat(input_prompt).response
+    except: 
+        response = "Calendar agent failed to process your input. Please try again with a different input string. try setting the number_of_results = 10 or lower ."
+    print(f'Caledar agent response: {response}')
+    return response if response else "process completed with code 0"

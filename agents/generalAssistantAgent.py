@@ -41,7 +41,7 @@ logging.basicConfig(level=logging.DEBUG, filename='generalAgent.log', filemode='
 
 # Retrieve the API key from the environment variables
 openai_api_key = os.getenv("OPENAI_API_KEY")
-print(openai_api_key)
+#print(openai_api_key)
 
 if not openai_api_key:
     raise ValueError("OPENAI_API_KEY not found in the .env file.")

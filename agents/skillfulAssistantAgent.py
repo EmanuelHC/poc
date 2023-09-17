@@ -27,6 +27,25 @@ load_dotenv()
 
 from utils.my_gmail_toolkit import CustomGmailToolkit
 
+import discord
+from discord.ext import commands
+import requests
+
+CHANNEL_ID = os.environ.get("DISCORD_CHANNEL_ID", "")
+TOKEN =  os.environ.get("DISCORD_TOKEN", "")
+WEBHOOK_URL = os.environ.get("DISCORD_WEBHOOK_ID", "")
+BASE_URL = "https://discord.com/api/v10"
+
+#print(f'channel id{CHANNEL_ID} ')
+#print(f'token:{TOKEN}')
+#print(f'webhook url: {WEBHOOK_URL} ')
+
+HEADERS = {
+    "Authorization": f"Bot {TOKEN}",
+    "Content-Type": "application/json",
+}
+
+
 os.environ["ZAPIER_NLA_API_KEY"] = os.environ.get("ZAPIER_NLA_API_KEY", "")
 
 import logging
@@ -37,7 +56,7 @@ logging.basicConfig(level=logging.DEBUG, filename='agents.log', filemode='w', fo
 
 # Retrieve the API key from the environment variables
 openai_api_key = os.getenv("OPENAI_API_KEY")
-print(openai_api_key)
+#print(openai_api_key)
 
 if not openai_api_key:
     raise ValueError("OPENAI_API_KEY not found in the .env file.")
@@ -77,7 +96,18 @@ class SkillfulAssistantAgent(BaseAssistantAgent):
                     name = "CSV",
                     func=self.csv_agent_tool,
                     description="First option to answer questions about csv files. Input: a question about the csv file. Output: an answer to the question. Please be very clear what the question is. Dont worry about the csv file, it is already uploaded into the tool"
+            ),
+            'Send Discord Message':Tool(
+                name="Send Discord Message", 
+                func=self._send_discord_message, 
+                description="Useful when you need to send a discord message. Input: a message to send."
+                ),
+            "Read Discord Messages":Tool(
+                name="Read Discord Messages",
+                func=self._read_discord_messages,
+                description="Useful when you need to read the last n messages from a discord channel. Input: Optional the number of messages to read. Default is 1. Output: the last n messages from the channel."
             )
+
         }
     
     def csv_agent_tool(self, input_prompt: str) -> str:
@@ -87,8 +117,46 @@ class SkillfulAssistantAgent(BaseAssistantAgent):
                                 verbose=True)
         return agent.run(input_prompt)
     
+    def discord_agent(self, input_prompt: str) -> str:
+        discord_tools = [
+                        ]
+
+        
+    
+
+    def _send_discord_message(self, input_prompt: str) -> str:
+        """Send a message to the Discord channel using a webhook."""
+        data = {"content": input_prompt}
+        response = requests.post(WEBHOOK_URL, json=data)
+        return response.status_code == 204  # 204 means the message was sent successfully
+        
+    def _read_discord_messages(self, n: int =10) -> str:
+        n = 10#int(n)
+        response = requests.get(f"{BASE_URL}/channels/{CHANNEL_ID}/messages?limit={n}", headers=HEADERS)
+        print(f'{response} is response')
+        logging.debug(f'{response} is response')
+        messages = response.json()
+
+        detailed_messages = []
+        for message in messages:
+            message_content = message['content']
+            if not message_content:  # If the message content is empty
+                if message['attachments']:
+                    message_content = "Attachment(s) present."
+                elif message['embeds']:
+                    message_content = "Embed(s) present."
+                else:
+                    message_content = "Empty message."
+            detailed_messages.append({
+                "author": message['author']['username'],
+                "content": message_content,
+                "timestamp": message['timestamp']
+            })
+
+        return detailed_messages
+        
     def set_tools(self):
-        other_tools = [self._tools['Web Search'], self.extend_tools['CSV']]
+        other_tools = [self._tools['Calendar'], self.extend_tools['CSV'], self.extend_tools['Read Discord Messages'], self.extend_tools['Send Discord Message']]
         #return other_tools
         return self.gmail_tools + other_tools 
     

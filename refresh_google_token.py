@@ -16,4 +16,4 @@ def refresh_google_token(token_file_name:str = 'token.json'):
     with open(token_file_name, 'w') as token_file:
         token_file.write(credentials.to_json())
 
-    print(f"Token refreshed and saved to {token_file_name}")
+    #print(f"Token refreshed and saved to {token_file_name}")
