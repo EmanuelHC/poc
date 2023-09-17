@@ -25,7 +25,7 @@ from llama_index.agent import OpenAIAgent
 import json
 import refresh_google_token
 from .baseAssistantAgent import BaseAssistantAgent, CustomPromptTemplate, CustomOutputParser
-from .tools.calendar import calendar_agent
+from .tools.calendar_tools import calendar_agent
 # Load the .env file
 load_dotenv()
 

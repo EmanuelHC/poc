@@ -158,7 +158,11 @@ class SkillfulAssistantAgent(BaseAssistantAgent):
         return response
         
     def set_tools(self):
-        other_tools = [self._tools['Calendar'], self.extend_tools['CSV'], self.extend_tools['Read Discord Messages'], self.extend_tools['Send Discord Message']]
+        other_tools = [self._tools['Calendar'], 
+                       self.extend_tools['CSV'], 
+                       self.extend_tools['Read Discord Messages'], 
+                       self.extend_tools['Send Discord Message'], 
+                       self._tools['Stock Info']]
         #return other_tools
         return self.gmail_tools + other_tools 
     

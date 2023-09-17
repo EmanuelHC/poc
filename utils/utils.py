@@ -5,7 +5,7 @@ import re
 import inflect
 from dateutil import parser
 import base64
-
+import PyPDF2 
 
 def get_log_streams():
     return io.StringIO(), io.StringIO()
@@ -65,5 +65,10 @@ def convert_to_words(text):
 
     return text
 
-print(convert_to_words('I was born on 12/12/2012 and I am 12 years old.'))
-print(convert_to_words('The average home price is 142.33'))
+def extract_text_from_pdf(uploaded_file):
+    """Extract text from the uploaded PDF file."""
+    pdf_reader = PyPDF2.PdfFileReader(uploaded_file)
+    text = ""
+    for page_num in range(pdf_reader.numPages):
+        text += pdf_reader.getPage(page_num).extractText()
+    return text

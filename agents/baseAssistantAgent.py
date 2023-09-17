@@ -21,7 +21,8 @@ from langchain.callbacks.base import BaseCallbackHandler
 from abc import ABC, abstractmethod
 from datetime import date
 from pydantic import BaseModel, Field
-from .tools.calendar import calendar_agent
+from .tools.calendar_tools import calendar_agent
+from .tools.stock_tools import stock_agent
 # Load the .env file
 load_dotenv()
 
@@ -82,6 +83,11 @@ class BaseAssistantAgent(ABC):
                     description='useful for when you need to ead and create new events on the human calendar. The input for this tool is a single string containing the natural language inscruction',
                 
                     ),
+                'Stock Info': Tool(
+                    name='Stock Info',
+                    func= self.stock_info,
+                    description='useful for when you need to get stock or crypto info. The input for this tool is a single string containing the information you want to get about the stock or crypto',
+                )
             }
             return tools
     
@@ -97,6 +103,9 @@ class BaseAssistantAgent(ABC):
         llm = OpenAI(temperature=0, verbose=True)
         pal_chain = PALChain.from_math_prompt(llm, verbose=True)
         return pal_chain.run(input)
+    
+    def stock_info(self, input):
+        return stock_agent(input)
     
     @abstractmethod
     def set_tools(self):
