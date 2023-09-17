@@ -21,7 +21,7 @@ import os
 import io 
 import sys 
 import tempfile
-
+import time
 SCOPES = ['https://mail.google.com/', 'https://www.googleapis.com/auth/calendar']
 
 from refresh_google_token import refresh_google_token
@@ -32,8 +32,10 @@ refresh_google_token(token_file_name)
 import base64
 
 def play_audio_autoplay(audio_bytes):
+    unique_timestamp = time.time()
     audio_b64 = base64.b64encode(audio_bytes).decode()
     audio_tag = f'<audio controls autoplay><source src="data:audio/wav;base64,{audio_b64}" type="audio/wav"></audio>'
+    #audio_tag = f'<audio controls autoplay><source src="data:audio/wav;base64,{audio_b64}?t={unique_timestamp}" type="audio/wav"></audio>'
     st.markdown(audio_tag, unsafe_allow_html=True)
 
 openai.api_key = os.environ.get("OPENAI_API_KEY", "")
@@ -135,9 +137,15 @@ def main():
         SKILLFUL_ASSISTANT_TAG: "assets/work_assistant_02.jpeg",
         CUSTOM_ASSISTANT_TAG: "assets/custom_assistant_01.jpeg"
     }
-
+    memories = []
     # Create two columns for layout
     col1, col2, col3  = st.columns([1,1, 1])
+
+    if 'audio_data' not in st.session_state:
+        st.session_state.audio_data = None
+
+    if 'audio_key' not in st.session_state:
+        st.session_state.audio_key = None
 
     with col1:
         assistant = st.selectbox('Select an assistant option from the list:', ( GENERAL_ASSITANT_TAG,
@@ -276,14 +284,21 @@ def main():
                     audio_path = run_tts(result_words)
                     with open(audio_path, 'rb') as f:
                         speech_result = f.read()
+                        st.session_state.audio_key = str(time.time())
+                        st.session_state.audio_data = speech_result
+                       
+                        
                 except Exception as e:
                     result = f"Proccess not finished succesfully due to: {e}" 
                     speech_result = None
 
                 st.markdown("<span style='color: white; font-size: 20px;'>{}</span>".format(result), unsafe_allow_html=True)
                 #st.markdown("<span style='color: white; font-size: 20px;'>{}</span>".format(result_words), unsafe_allow_html=True)
-                if speech_result:
-                    play_audio_autoplay(speech_result)
+                #if speech_result:
+                    #play_audio_autoplay(speech_result)
+                if st.session_state.audio_data:
+                    st.audio(st.session_state.audio_data, format="audio/wav")
+                    #play_audio_autoplay(st.session_state.audio_data)
             if 'previous_output' not in st.session_state:
                 st.session_state.previous_output =   ''
             with col2:
@@ -307,9 +322,10 @@ def main():
                 
             with col3:
                 st.subheader("Memory")
+                #memories.append(agent.memory.load_memory_variables({})) 
                 memories = agent.memory.load_memory_variables({})
-                #st.write(agent.memory)
-                st.write(memories)
+                st.write(agent.memory)
+                #st.write(memories)
                 
 
         

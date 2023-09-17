@@ -67,6 +67,7 @@ class SkillfulAssistantAgent(BaseAssistantAgent):
         self.set_gmail_tools()
         self.extend_tools()
         super().__init__()
+        self.initialize_agent()
         
       
 
@@ -167,6 +168,20 @@ class SkillfulAssistantAgent(BaseAssistantAgent):
         return memory
     def set_prompt_template(self):
         return ''
+    
+    def initialize_agent(self):
+        llm = self.llm #OpenAI(temperature=0)
+        self.agent = initialize_agent(
+        tools= self.tools,
+        llm=llm,
+        agent=AgentType.STRUCTURED_CHAT_ZERO_SHOT_REACT_DESCRIPTION,
+        #return_intermediate_steps=True
+        memory = self.memory,
+        verbose=True 
+        )
+        logging.debug(f'agent is {self.agent}')
+        logging.debug(f'agent template {self.agent.agent.llm_chain.prompt}')
+
     def run_agent(self, input_prompt: str) -> str:
         '''
         prefix = """You are an AI who performs one task based on the following objective: {objective}. Take into account these previously completed tasks: {context}."""
@@ -183,7 +198,7 @@ class SkillfulAssistantAgent(BaseAssistantAgent):
                                  tools=self.tools, 
                                  max_iterations=max_iterations) 
 
-        '''
+       
 
 
 
@@ -198,4 +213,5 @@ class SkillfulAssistantAgent(BaseAssistantAgent):
         )
         logging.debug(f'agent is {agent}')
         logging.debug(f'agent template {agent.agent.llm_chain.prompt}')
-        return agent.run(input_prompt) 
+         '''
+        return self.agent.run(input_prompt) 
