@@ -2,17 +2,23 @@
 import discord
 from discord.ext import commands
 import requests
+import os
+import dotenv
+
+dotenv.load_dotenv()
 
 CHANNEL_ID = '1152713683185704980'
-TOKEN = 'MTE1Mjc0MTI4MTE1MjM4NTExNg.GHgU5F.bMvcftqXgGCQOMn1f19j8DplS424c6qN6bkHr0'
-WEBHOOK_URL = 'https://discord.com/api/webhooks/1152744387386806435/HjJ4p9zSUN7BQD2Nykz0TY1KqYHNynXBHdbxmWDNC--K48S5PnATdfkVbYWsa3GzlD9p' 
+TOKEN = os.environ.get("DISCORD_TOKEN", "")
+WEBHOOK_URL = os.environ.get("DISCORD_WEBHOOK_ID", "")
 BASE_URL = "https://discord.com/api/v10"
-GUILD_ID = '1121231863130882119'
+GUILD_ID = os.environ.get("DISCORD_GUILD_ID", "")
 
 HEADERS = {
     "Authorization": f"Bot {TOKEN}",
     "Content-Type": "application/json",
 }
+
+print(f'Discord token: {TOKEN}')
 
 def read_last_n_messages(n=10):
     response = requests.get(f"{BASE_URL}/channels/{CHANNEL_ID}/messages?limit={n}", headers=HEADERS)

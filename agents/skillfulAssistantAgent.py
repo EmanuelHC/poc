@@ -153,7 +153,8 @@ class SkillfulAssistantAgent(BaseAssistantAgent):
                 "timestamp": message['timestamp']
             })
 
-        return detailed_messages
+        response = f'The last {n} messages in descending orrder are: \n' + str(detailed_messages)
+        return response
         
     def set_tools(self):
         other_tools = [self._tools['Calendar'], self.extend_tools['CSV'], self.extend_tools['Read Discord Messages'], self.extend_tools['Send Discord Message']]

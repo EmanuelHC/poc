@@ -15,6 +15,6 @@ def calendar_agent(input_prompt):
         agent = OpenAIAgent.from_tools(gcal_tools, verbose=True)
         response = agent.chat(input_prompt).response
     except: 
-        response = "Calendar agent failed to process your input. Please try again with a different input string. try setting the number_of_results = 10 or lower ."
+        response = "Calendar agent failed to process your input. Please try again with a different input string. try setting the number_of_results = 10 or less."
     print(f'Caledar agent response: {response}')
     return response if response else "process completed with code 0"
