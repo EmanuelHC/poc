@@ -2,7 +2,7 @@ import openai
 import streamlit as st
 import subprocess
 import dotenv 
-from utils.utils import CaptureLogs, stdout_stream, stderr_stream
+from utils.utils import CaptureLogs, stdout_stream, stderr_stream, convert_to_words
 from audio_recorder_streamlit import audio_recorder
 from audiorecorder import audiorecorder
 from agents.medicalAssistantAgent import MedicalAssistantAgent
@@ -21,6 +21,7 @@ import os
 import io 
 import sys 
 import tempfile
+
 SCOPES = ['https://mail.google.com/', 'https://www.googleapis.com/auth/calendar']
 
 from refresh_google_token import refresh_google_token
@@ -40,6 +41,7 @@ MEDICAL_ASSITANT_TAG = 'Skillful Medical Assistant'
 GENERAL_ASSITANT_TAG = "Skillful General Assistant"
 #WORK_ASSISTANT_TAG = "Skillful Work Assistant"
 SKILLFUL_ASSISTANT_TAG = "Skillful AI Assistant"
+CUSTOM_ASSISTANT_TAG = "Build Custom Assistant"
 
 OUTPUT_CHAIN_FILE_NAME = 'agent_execution_chain.txt'
 # Set page config at the top
@@ -130,8 +132,8 @@ def main():
     assistant_images = {
         GENERAL_ASSITANT_TAG: "assets/general_assistant_01.jpeg",
         MEDICAL_ASSITANT_TAG: "assets/medical_assistant_03.jpeg",
-     
-        SKILLFUL_ASSISTANT_TAG: "assets/work_assistant_02.jpeg"
+        SKILLFUL_ASSISTANT_TAG: "assets/work_assistant_02.jpeg",
+        CUSTOM_ASSISTANT_TAG: "assets/custom_assistant_01.jpeg"
     }
 
     # Create two columns for layout
@@ -140,8 +142,18 @@ def main():
     with col1:
         assistant = st.selectbox('Select an assistant option from the list:', ( GENERAL_ASSITANT_TAG,
                                                                                 MEDICAL_ASSITANT_TAG, 
-                                                                            SKILLFUL_ASSISTANT_TAG,))
+                                                                            SKILLFUL_ASSISTANT_TAG,
+                                                                            CUSTOM_ASSISTANT_TAG))
         uploaded_file = st.file_uploader("Choose a CSV file", type="csv")
+        if assistant == CUSTOM_ASSISTANT_TAG:
+            cmd = ["python", "-m", "langflow"]
+            process = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+            stdout, stderr = process.communicate()
+            if process.returncode == 0:
+                st.success("Successfully started custom build interface!")
+            else:
+                st.error(f"Failed to start custom build interface. Error: {stderr.decode('utf-8')}")
+
         # Check if a file has been uploaded
         if uploaded_file:
         # Save the uploaded file to a desired location
@@ -236,7 +248,13 @@ def main():
         # Delete existing temp file
         if os.path.exists(OUTPUT_CHAIN_FILE_NAME):
             os.remove(OUTPUT_CHAIN_FILE_NAME)
+        stdout_stream.truncate(0)
+        stdout_stream.seek(0)
+        stderr_stream.truncate(0)
+        stderr_stream.seek(0)
 
+        # Reset previous_output session state
+        st.session_state.previous_output = ''
         # Create a new temp file
        
       
@@ -254,8 +272,8 @@ def main():
                         #sys.stdout = temp_file
                         result = agent.run_agent(input_prompt)
                         #sys.stdout = original_stdout
-
-                    audio_path = run_tts(result)
+                    result_words = convert_to_words(result)
+                    audio_path = run_tts(result_words)
                     with open(audio_path, 'rb') as f:
                         speech_result = f.read()
                 except Exception as e:
@@ -263,6 +281,7 @@ def main():
                     speech_result = None
 
                 st.markdown("<span style='color: white; font-size: 20px;'>{}</span>".format(result), unsafe_allow_html=True)
+                #st.markdown("<span style='color: white; font-size: 20px;'>{}</span>".format(result_words), unsafe_allow_html=True)
                 if speech_result:
                     play_audio_autoplay(speech_result)
             if 'previous_output' not in st.session_state:

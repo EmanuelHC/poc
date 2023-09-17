@@ -1,6 +1,11 @@
 import sys
 import io
 import streamlit as st
+import re
+import inflect
+from dateutil import parser
+import base64
+
 
 def get_log_streams():
     return io.StringIO(), io.StringIO()
@@ -19,7 +24,6 @@ class CaptureLogs:
         sys.stderr = self._original_stderr
 
 
-import base64
 
 @st.cache_data
 def get_base64_of_bin_file(bin_file):
@@ -42,3 +46,24 @@ def set_png_as_page_bg(png_file):
     return
 
 #print(get_base64_of_bin_file('assets/back.png'))
+
+
+def convert_to_words(text):
+    p = inflect.engine()
+
+    # Convert dates
+    date_pattern = r'(\d{1,2}/\d{1,2}/\d{2,4})'
+    text = re.sub(date_pattern, lambda x: '/'.join([p.number_to_words(i) for i in x.group().split('/')]), text)
+
+    # Convert decimal numbers
+    decimal_pattern = r'(\d+)\.(\d+)'
+    text = re.sub(decimal_pattern, lambda x: p.number_to_words(int(x.group(1))) + " point " + ' '.join([p.number_to_words(int(i)) for i in x.group(2)]), text)
+
+    # Convert whole numbers
+    number_pattern = r'(?<!\d\.)(\d+)(?!\.\d)'
+    text = re.sub(number_pattern, lambda x: p.number_to_words(int(x.group())), text)
+
+    return text
+
+print(convert_to_words('I was born on 12/12/2012 and I am 12 years old.'))
+print(convert_to_words('The average home price is 142.33'))

@@ -48,7 +48,7 @@ class BaseAssistantAgent(ABC):
         self._tools = self.build_tools()
         self.tools = self.set_tools()
         self.prompt_template = self.set_prompt_template()
-        self.llm = OpenAI(temperature=0)
+        self.llm = OpenAI(temperature=0, model_name='gpt-4')
         self.memory = self.set_memory()
         self.output_parser = CustomOutputParser()
 
