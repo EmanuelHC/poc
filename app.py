@@ -273,7 +273,8 @@ def main():
                 # Extract the new content added since the last iteration
                 new_output = current_output[len(st.session_state.previous_output):]
                 # Display the new content in Streamlit
-                st.write(new_output)
+                #st.write(new_output)
+                st.markdown("<span style='color: white; font-size: 20px;'>{}</span>".format(new_output), unsafe_allow_html=True)
                 # Update the session state variable for the next iteration
                 st.session_state.previous_output = current_output
                 
@@ -287,7 +288,9 @@ def main():
                 
             with col3:
                 st.subheader("Memory")
-                st.write(agent.memory)
+                memories = agent.memory.load_memory_variables({})
+                #st.write(agent.memory)
+                st.write(memories)
                 
 
         
