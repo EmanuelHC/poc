@@ -81,7 +81,8 @@ class SkillfulAssistantAgent(BaseAssistantAgent):
         api_resource = build_resource_service(credentials=credentials)
         toolkit = GmailToolkit(api_resource=api_resource)
         #toolkit = GmailToolkit()
-        self.gmail_tools = toolkit.get_tools()
+        self.gmail_tools = toolkit.get_tools()[1:]
+        print(self.gmail_tools)
 
     
 
@@ -158,11 +159,13 @@ class SkillfulAssistantAgent(BaseAssistantAgent):
         return response
         
     def set_tools(self):
-        other_tools = [self._tools['Calendar'], 
+        other_tools = [self._tools["Web Search"], 
                        self.extend_tools['CSV'], 
                        self.extend_tools['Read Discord Messages'], 
                        self.extend_tools['Send Discord Message'], 
-                       self._tools['Stock Info']]
+                       self._tools['Stock Info'],
+                       self._tools['Predict BTC']
+                       ]
         #return other_tools
         return self.gmail_tools + other_tools 
     

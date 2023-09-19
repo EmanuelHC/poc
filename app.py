@@ -41,22 +41,10 @@ def play_audio_autoplay(audio_bytes):
     # audio_tag = f'<audio controls autoplay><source src="data:audio/wav;base64,{audio_b64}?t={unique_timestamp}" type="audio/wav"></audio>'
     st.markdown(audio_tag, unsafe_allow_html=True)
 
-
-openai.api_key = os.environ.get("OPENAI_API_KEY", "")
-MEDICAL_ASSITANT_TAG = 'Skillful Medical Assistant'
-GENERAL_ASSITANT_TAG = "Skillful General Assistant"
-# WORK_ASSISTANT_TAG = "Skillful Work Assistant"
-SKILLFUL_ASSISTANT_TAG = "Skillful AI Assistant"
-CUSTOM_ASSISTANT_TAG = "Build Custom Assistant"
-
-OUTPUT_CHAIN_FILE_NAME = 'agent_execution_chain.txt'
-# Set page config at the top
 st.set_page_config(layout="wide")
 bin_background_image = get_base64_of_bin_file('assets/back3.png')
 logo_image_base64 = get_base64_of_bin_file('assets/logo2c.png')
 
-# print(bin_background_image)
-# Add Streamlit customization
 page_bg_img = f"""
 <style>
     /* Set the main background color and style */
@@ -107,6 +95,20 @@ page_bg_img = f"""
 """
 
 st.markdown(page_bg_img, unsafe_allow_html=True)
+
+openai.api_key = os.environ.get("OPENAI_API_KEY", "")
+MEDICAL_ASSITANT_TAG = 'Skillful Medical Assistant'
+GENERAL_ASSITANT_TAG = "Skillful General Assistant"
+# WORK_ASSISTANT_TAG = "Skillful Work Assistant"
+SKILLFUL_ASSISTANT_TAG = "Skillful AI Assistant"
+CUSTOM_ASSISTANT_TAG = "Build Custom Assistant"
+
+OUTPUT_CHAIN_FILE_NAME = 'agent_execution_chain.txt'
+# Set page config at the top
+
+# print(bin_background_image)
+# Add Streamlit customization
+
 
 
 def get_selected_agent(assistant):

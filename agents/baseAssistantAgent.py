@@ -23,6 +23,7 @@ from datetime import date
 from pydantic import BaseModel, Field
 from .tools.calendar_tools import calendar_agent
 from .tools.stock_tools import stock_agent
+from .tools.btc_forecast_tool import load_and_predict
 # Load the .env file
 load_dotenv()
 
@@ -87,7 +88,12 @@ class BaseAssistantAgent(ABC):
                     name='Stock Info',
                     func= self.stock_info,
                     description='useful for when you need to get stock or crypto info. The input for this tool is a single string containing the information you want to get about the stock or crypto',
-                )
+                ),
+                'Predict BTC': Tool(
+                    name='Predict BTC',
+                    func= self._predict_btc,
+                    description='useful for when you need to predict the price of BTC. The input for this tool is an integer representing the number of days in the future you want to predict the price of BTC.\
+                        The output is the date with the corresponding predicted price' ),
             }
             return tools
     
@@ -95,6 +101,10 @@ class BaseAssistantAgent(ABC):
         search = DuckDuckGoSearchRun()
         search_results = search.run(f"site:webmd.com {input}")
         return search_results
+    
+    def _predict_btc(self, input):
+        return load_and_predict(predict_days=int(input))
+
     
     def _todays_date(self, input):
         return date.today().strftime("%B %d, %Y")
